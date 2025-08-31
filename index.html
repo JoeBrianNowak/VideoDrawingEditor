@@ -15,57 +15,63 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
+            width: 100vw;
             display: flex;
-            flex-direction: column;
             color: #333;
             margin: 0;
+            padding: 0;
             overflow: hidden;
+            position: fixed;
         }
 
         .container {
             display: flex;
             height: 100vh;
-            max-width: 100vw;
+            width: 100vw;
+            overflow: hidden;
         }
 
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 10px;
             overflow: hidden;
+            min-width: 0;
         }
 
         .sidebar {
-            width: 350px;
+            width: 320px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            padding: 20px;
+            padding: 10px;
             overflow-y: auto;
             border-left: 1px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
         }
 
         .header {
             background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
         }
 
         h1 {
             color: #764ba2;
             text-align: center;
-            margin-bottom: 5px;
-            font-size: 2em;
+            margin: 0 0 5px 0;
+            font-size: 1.5em;
             font-weight: 300;
         }
 
         .subtitle {
             text-align: center;
             color: #666;
-            font-size: 0.9em;
+            font-size: 0.8em;
+            margin: 0;
         }
 
         .upload-section {
@@ -110,18 +116,34 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
+        .upload-section {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .main-editor {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+
         .video-canvas-container {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             flex: 1;
             align-items: flex-start;
-            height: calc(100vh - 140px);
+            height: calc(100vh - 80px);
+            overflow: hidden;
         }
 
         .video-section {
-            flex: 0 0 25%;
-            min-width: 250px;
-            max-width: 300px;
+            flex: 0 0 200px;
+            width: 200px;
         }
 
         .canvas-section {
@@ -129,6 +151,7 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            min-width: 0;
         }
 
         .section-title {
@@ -138,19 +161,25 @@
             font-weight: 600;
         }
 
+        .section-title {
+            color: #764ba2;
+            font-size: 1em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
         video {
             width: 100%;
-            max-width: 280px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         canvas {
             width: 100%;
-            height: calc(100% - 40px);
-            max-height: calc(100vh - 180px);
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 120px);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             cursor: crosshair;
             touch-action: none;
             background: #fff;
@@ -158,31 +187,31 @@
 
         .sidebar-section {
             background: rgba(102, 126, 234, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
         }
 
         .sidebar-section h3 {
             color: #764ba2;
-            font-size: 1.1em;
-            margin-bottom: 10px;
+            font-size: 0.9em;
+            margin: 0 0 8px 0;
             font-weight: 600;
         }
 
         .tool-group {
             display: flex;
-            gap: 8px;
+            gap: 5px;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             flex-wrap: wrap;
         }
 
         .tool-group label {
             font-weight: 600;
             color: #764ba2;
-            min-width: 60px;
-            font-size: 0.9em;
+            min-width: 55px;
+            font-size: 0.8em;
         }
 
         .color-picker, .brush-size {
@@ -278,47 +307,87 @@
             font-weight: 600;
         }
 
+        /* Ottimizzazioni specifiche per iPad 10.9" */
+        @media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) {
+            body {
+                -webkit-text-size-adjust: none;
+                user-select: none;
+            }
+            
+            .sidebar {
+                width: 280px;
+                padding: 8px;
+            }
+            
+            .tool-btn, .control-btn {
+                min-height: 32px;
+                min-width: 32px;
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            
+            .export-btn {
+                min-height: 36px;
+                font-size: 12px;
+            }
+        }
+
         @media (max-width: 1200px) {
             .container {
-                flex-direction: column;
+                flex-direction: column-reverse;
             }
             
             .sidebar {
                 width: 100%;
-                height: auto;
-                max-height: 40vh;
+                height: 200px;
                 border-left: none;
                 border-top: 1px solid rgba(255, 255, 255, 0.2);
+                flex-shrink: 0;
             }
             
             .main-content {
-                height: 60vh;
+                flex: 1;
+                min-height: 0;
+            }
+            
+            .video-canvas-container {
+                height: calc(100vh - 240px);
+            }
+            
+            canvas {
+                height: calc(100vh - 280px);
             }
         }
 
         @media (max-width: 768px) {
             .video-canvas-container {
                 flex-direction: column;
-                height: auto;
             }
             
             .video-section {
                 flex: none;
-                max-width: 100%;
+                width: 100%;
             }
             
             .canvas-section {
-                height: 50vh;
+                flex: 1;
+                min-height: 300px;
             }
             
             .sidebar {
-                max-height: none;
+                height: 180px;
+                padding: 5px;
+            }
+            
+            .sidebar-section {
+                padding: 6px;
+                margin-bottom: 6px;
             }
             
             .tool-btn, .control-btn, .export-btn {
-                padding: 12px 20px;
-                font-size: 16px;
-                min-height: 44px;
+                padding: 8px 12px;
+                font-size: 14px;
+                min-height: 40px;
             }
         }
 
@@ -626,7 +695,7 @@
         }
 
         function getCurrentFrameKey() {
-            return Math.floor(video.currentTime * 30); // 30 FPS approximation
+            return Math.floor(video.currentTime * 24); // 24 FPS
         }
 
         function updateCanvas() {
@@ -734,11 +803,11 @@
         }
 
         function previousFrame() {
-            video.currentTime = Math.max(0, video.currentTime - 1/30);
+            video.currentTime = Math.max(0, video.currentTime - 1/24);
         }
 
         function nextFrame() {
-            video.currentTime = Math.min(video.duration, video.currentTime + 1/30);
+            video.currentTime = Math.min(video.duration, video.currentTime + 1/24);
         }
 
         function updateTimeDisplay() {
@@ -883,8 +952,8 @@
                 exportCanvas.width = video.videoWidth;
                 exportCanvas.height = video.videoHeight;
 
-                // Calcola il framerate (assumiamo 30 FPS)
-                const fps = 30;
+                // Calcola il framerate (24 FPS)
+                const fps = 24;
                 const duration = video.duration;
                 const totalFrames = Math.floor(duration * fps);
                 
@@ -995,7 +1064,7 @@
                 progressText.textContent = 'Esportando come sequenza di immagini...';
                 progressBar.style.width = '10%';
 
-                const fps = 30;
+                const fps = 24;
                 const duration = video.duration;
                 const totalFrames = Math.floor(duration * fps);
                 
