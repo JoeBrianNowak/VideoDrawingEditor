@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Drawing Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 100vw;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #764ba2;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 2em;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: #764ba2;
+        }
+
+        .upload-section input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .main-editor {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-canvas-container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            align-items: flex-start;
+            height: calc(100vh - 140px);
+        }
+
+        .video-section {
+            flex: 0 0 25%;
+            min-width: 250px;
+            max-width: 300px;
+        }
+
+        .canvas-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .section-title {
+            color: #764ba2;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        video {
+            width: 100%;
+            max-width: 280px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            width: 100%;
+            height: calc(100% - 40px);
+            max-height: calc(100vh - 180px);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            cursor: crosshair;
+            touch-action: none;
+            background: #fff;
+        }
+
+        .sidebar-section {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .sidebar-section h3 {
+            color: #764ba2;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tool-group label {
+            font-weight: 600;
+            color: #764ba2;
+            min-width: 60px;
+            font-size: 0.9em;
+        }
+
+        .color-picker, .brush-size {
+            padding: 5px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background: white;
+        }
+
+        .tool-btn {
+            padding: 8px 16px;
+            margin: 2px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .tool-btn:hover, .tool-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .video-controls {
+            background: rgba(118, 75, 162, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .time-slider {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .export-section {
+            background: rgba(118, 75, 162, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .frame-info {
+            text-align: center;
+            color: #666;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+                border-left: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .main-content {
+                height: 60vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .video-canvas-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .video-section {
+                flex: none;
+                max-width: 100%;
+            }
+            
+            .canvas-section {
+                height: 50vh;
+            }
+            
+            .sidebar {
+                max-height: none;
+            }
+            
+            .tool-btn, .control-btn, .export-btn {
+                padding: 12px 20px;
+                font-size: 16px;
+                min-height: 44px;
+            }
+        }
+
+        /* Ottimizzazioni per iPad e Apple Pencil */
+        @media (pointer: fine) and (hover: hover) {
+            canvas {
+                cursor: crosshair;
+            }
+        }
+
+        @media (pointer: coarse) {
+            canvas {
+                cursor: none;
+            }
+            
+            .tool-btn, .control-btn, .export-btn {
+                padding: 12px 20px;
+                font-size: 16px;
+                min-height: 44px; /* Target size Apple raccomandato */
+            }
+        }
+
+        /* Supporto specifico per iPad */
+        @supports (-webkit-touch-callout: none) {
+            canvas {
+                -webkit-user-select: none;
+                user-select: none;
+                -webkit-touch-callout: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>🎨 Video Drawing Editor</h1>
+                <p class="subtitle">Carica un video e applica effetti di disegno sui fotogrammi</p>
+            </div>
+
+            <div class="upload-section" id="uploadSection">
+                <h3>Carica il tuo video</h3>
+                <p>Supporta formati: MP4, WebM, AVI, MOV</p>
+                <input type="file" id="videoFile" accept="video/*">
+                <button class="upload-btn" onclick="document.getElementById('videoFile').click()">
+                    📁 Scegli Video
+                </button>
+            </div>
+
+            <div class="main-editor" id="mainEditor">
+                <div class="video-canvas-container">
+                    <div class="video-section">
+                        <h3 class="section-title">🎬 Video Originale</h3>
+                        <video id="videoPlayer" controls></video>
+                    </div>
+                    <div class="canvas-section">
+                        <h3 class="section-title">🎨 Canvas di Disegno</h3>
+                        <canvas id="drawingCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <h3>🖌️ Strumenti di Disegno</h3>
+                <div class="tool-group">
+                    <label>Strumento:</label>
+                    <button class="tool-btn active" data-tool="pen">✏️ Penna</button>
+                    <button class="tool-btn" data-tool="brush">🖌️ Pennello</button>
+                    <button class="tool-btn" data-tool="eraser">🧹 Gomma</button>
+                </div>
+                <div class="tool-group">
+                    <button class="tool-btn" data-tool="line">📏 Linea</button>
+                    <button class="tool-btn" data-tool="circle">⭕ Cerchio</button>
+                    <button class="tool-btn" data-tool="rectangle">▭ Rettangolo</button>
+                </div>
+                <div class="tool-group">
+                    <label>Colore:</label>
+                    <input type="color" class="color-picker" id="colorPicker" value="#ff0000">
+                </div>
+                <div class="tool-group">
+                    <label>Dimensione:</label>
+                    <input type="range" class="brush-size" id="brushSize" min="1" max="50" value="5">
+                    <span id="sizeDisplay">5px</span>
+                </div>
+                <div class="tool-group">
+                    <button class="tool-btn" onclick="clearCanvas()">🗑️ Pulisci</button>
+                    <button class="tool-btn" onclick="toggleDrawingLayer()">👁️ Mostra/Nascondi</button>
+                </div>
+                <div class="tool-group">
+                    <button class="tool-btn" onclick="toggleOnionSkin()">👻 Onion Skin</button>
+                    <button class="tool-btn" onclick="copyFromPreviousFrame()">📋 Copia Precedente</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>🎮 Controlli Video</h3>
+                <div class="controls-row">
+                    <button class="control-btn" onclick="previousFrame()">⏮️ Precedente</button>
+                    <button class="control-btn" onclick="playPause()">⏯️ Play/Pausa</button>
+                    <button class="control-btn" onclick="nextFrame()">⏭️ Successivo</button>
+                </div>
+                <div class="controls-row">
+                    <input type="range" class="time-slider" id="timeSlider" min="0" max="100" value="0">
+                </div>
+                <div class="frame-info">
+                    <span id="timeDisplay">00:00 / 00:00</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>💾 Esportazione</h3>
+                <button class="export-btn" onclick="exportFrame()">📸 Esporta Frame Corrente</button>
+                <button class="export-btn" onclick="exportDrawing()">🎨 Esporta Solo Disegno</button>
+                <button class="export-btn" onclick="exportVideo()">🎬 Esporta Video Completo</button>
+                <div id="exportProgress" style="display: none; margin-top: 10px;">
+                    <div style="background: #ddd; border-radius: 10px; overflow: hidden;">
+                        <div id="progressBar" style="height: 20px; background: linear-gradient(45deg, #667eea, #764ba2); width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                    <p id="progressText" style="text-align: center; margin-top: 5px; font-size: 0.8em;">Preparazione...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        let video, canvas, ctx;
+        let isDrawing = false;
+        let currentTool = 'pen';
+        let drawings = new Map();
+        let showDrawings = true;
+        let showOnionSkin = false;
+        let startX, startY;
+
+        document.getElementById('videoFile').addEventListener('change', loadVideo);
+
+        function loadVideo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            video = document.getElementById('videoPlayer');
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+
+            const url = URL.createObjectURL(file);
+            video.src = url;
+
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const timeSlider = document.getElementById('timeSlider');
+                timeSlider.max = video.duration;
+                
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('mainEditor').style.display = 'block';
+                
+                setupCanvasEvents();
+                setupVideoEvents();
+                updateCanvas();
+            });
+        }
+
+        function setupCanvasEvents() {
+            // Previeni comportamenti di default per eventi touch
+            canvas.addEventListener('touchstart', handleTouch, { passive: false });
+            canvas.addEventListener('touchmove', handleTouch, { passive: false });
+            canvas.addEventListener('touchend', handleTouch, { passive: false });
+            canvas.addEventListener('touchcancel', stopDrawing, { passive: false });
+
+            // Eventi mouse per desktop
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseout', stopDrawing);
+
+            // Previeni lo scroll della pagina quando si disegna
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+        }
+
+        function setupVideoEvents() {
+            video.addEventListener('timeupdate', () => {
+                document.getElementById('timeSlider').value = video.currentTime;
+                updateTimeDisplay();
+                updateCanvas();
+            });
+
+            document.getElementById('timeSlider').addEventListener('input', (e) => {
+                video.currentTime = e.target.value;
+            });
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Supporto per Apple Pencil - rileva la pressione se disponibile
+            const touch = e.touches[0] || e.changedTouches[0];
+            if (!touch) return;
+            
+            // Simula eventi mouse per compatibilità con la logica esistente
+            let mouseEvent;
+            if (e.type === 'touchstart') {
+                mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+            } else if (e.type === 'touchmove') {
+                mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+            } else if (e.type === 'touchend' || e.type === 'touchcancel') {
+                mouseEvent = new MouseEvent('mouseup', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+            }
+            
+            if (mouseEvent) {
+                // Aggiungi proprietà specifiche per Apple Pencil se disponibili
+                if (touch.force !== undefined) {
+                    mouseEvent.pressure = touch.force;
+                }
+                if (touch.altitudeAngle !== undefined) {
+                    mouseEvent.tiltX = Math.cos(touch.altitudeAngle) * Math.sin(touch.azimuthAngle) * 90;
+                    mouseEvent.tiltY = Math.cos(touch.altitudeAngle) * Math.cos(touch.azimuthAngle) * 90;
+                }
+                
+                canvas.dispatchEvent(mouseEvent);
+            }
+        }
+
+        function getCanvasCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCanvasCoordinates(e);
+            startX = coords.x;
+            startY = coords.y;
+            
+            const frameKey = getCurrentFrameKey();
+            if (!drawings.has(frameKey)) {
+                drawings.set(frameKey, []);
+            }
+
+            if (currentTool === 'pen' || currentTool === 'brush' || currentTool === 'eraser') {
+                drawings.get(frameKey).push({
+                    tool: currentTool,
+                    color: currentTool === 'eraser' ? 'rgba(0,0,0,0)' : document.getElementById('colorPicker').value,
+                    size: document.getElementById('brushSize').value,
+                    points: [{x: coords.x, y: coords.y}]
+                });
+            }
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+
+            const coords = getCanvasCoordinates(e);
+            const frameKey = getCurrentFrameKey();
+            const frameDrawings = drawings.get(frameKey);
+
+            if (currentTool === 'pen' || currentTool === 'brush' || currentTool === 'eraser') {
+                const currentStroke = frameDrawings[frameDrawings.length - 1];
+                currentStroke.points.push({x: coords.x, y: coords.y});
+                updateCanvas();
+            }
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            isDrawing = false;
+
+            const coords = getCanvasCoordinates(e);
+            const frameKey = getCurrentFrameKey();
+            const frameDrawings = drawings.get(frameKey);
+
+            if (currentTool === 'line' || currentTool === 'circle' || currentTool === 'rectangle') {
+                frameDrawings.push({
+                    tool: currentTool,
+                    color: document.getElementById('colorPicker').value,
+                    size: document.getElementById('brushSize').value,
+                    startX: startX,
+                    startY: startY,
+                    endX: coords.x,
+                    endY: coords.y
+                });
+                updateCanvas();
+            }
+        }
+
+        function getCurrentFrameKey() {
+            return Math.floor(video.currentTime * 30); // 30 FPS approximation
+        }
+
+        function updateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Disegna il frame corrente del video
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Disegna i disegni del frame precedente in onion skin se abilitato
+            if (showOnionSkin && showDrawings) {
+                const previousFrameKey = getCurrentFrameKey() - 1;
+                const previousFrameDrawings = drawings.get(previousFrameKey);
+                
+                if (previousFrameDrawings && previousFrameKey >= 0) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.3; // Trasparenza per l'onion skin
+                    ctx.strokeStyle = '#0088ff'; // Colore bluastro per distinguere
+                    
+                    previousFrameDrawings.forEach(drawing => {
+                        drawShapeWithCustomStyle(drawing, '#0088ff', 0.3);
+                    });
+                    
+                    ctx.restore();
+                }
+            }
+            
+            // Disegna i disegni del frame corrente se visibili
+            if (showDrawings) {
+                const frameKey = getCurrentFrameKey();
+                const frameDrawings = drawings.get(frameKey);
+                
+                if (frameDrawings) {
+                    frameDrawings.forEach(drawing => {
+                        drawShape(drawing);
+                    });
+                }
+            }
+        }
+
+        function drawShapeWithCustomStyle(drawing, customColor = null, customAlpha = 1) {
+            ctx.save();
+            ctx.globalCompositeOperation = drawing.tool === 'eraser' ? 'destination-out' : 'source-over';
+            ctx.strokeStyle = customColor || drawing.color;
+            ctx.lineWidth = drawing.size;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.globalAlpha = customAlpha;
+
+            if (drawing.points) {
+                // Disegna stroke libero
+                ctx.beginPath();
+                ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+                for (let i = 1; i < drawing.points.length; i++) {
+                    ctx.lineTo(drawing.points[i].x, drawing.points[i].y);
+                }
+                ctx.stroke();
+            } else {
+                // Disegna forme geometriche
+                ctx.beginPath();
+                if (drawing.tool === 'line') {
+                    ctx.moveTo(drawing.startX, drawing.startY);
+                    ctx.lineTo(drawing.endX, drawing.endY);
+                } else if (drawing.tool === 'circle') {
+                    const radius = Math.sqrt(
+                        Math.pow(drawing.endX - drawing.startX, 2) + 
+                        Math.pow(drawing.endY - drawing.startY, 2)
+                    );
+                    ctx.arc(drawing.startX, drawing.startY, radius, 0, 2 * Math.PI);
+                } else if (drawing.tool === 'rectangle') {
+                    ctx.rect(drawing.startX, drawing.startY, 
+                            drawing.endX - drawing.startX, 
+                            drawing.endY - drawing.startY);
+                }
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
+
+        function drawShape(drawing) {
+            drawShapeWithCustomStyle(drawing);
+        }
+
+        // Tool selection
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+            });
+        });
+
+        // Brush size display
+        document.getElementById('brushSize').addEventListener('input', (e) => {
+            document.getElementById('sizeDisplay').textContent = e.target.value + 'px';
+        });
+
+        // Video controls
+        function playPause() {
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+
+        function previousFrame() {
+            video.currentTime = Math.max(0, video.currentTime - 1/30);
+        }
+
+        function nextFrame() {
+            video.currentTime = Math.min(video.duration, video.currentTime + 1/30);
+        }
+
+        function updateTimeDisplay() {
+            const current = formatTime(video.currentTime);
+            const duration = formatTime(video.duration);
+            document.getElementById('timeDisplay').textContent = `${current} / ${duration}`;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function clearCanvas() {
+            const frameKey = getCurrentFrameKey();
+            drawings.delete(frameKey);
+            updateCanvas();
+        }
+
+        function toggleDrawingLayer() {
+            showDrawings = !showDrawings;
+            updateCanvas();
+        }
+
+        function toggleOnionSkin() {
+            showOnionSkin = !showOnionSkin;
+            
+            // Aggiorna visivamente il bottone
+            const onionSkinBtn = event.target;
+            if (showOnionSkin) {
+                onionSkinBtn.classList.add('active');
+            } else {
+                onionSkinBtn.classList.remove('active');
+            }
+            
+            updateCanvas();
+        }
+
+        function copyFromPreviousFrame() {
+            const currentFrameKey = getCurrentFrameKey();
+            const previousFrameKey = currentFrameKey - 1;
+            
+            if (previousFrameKey < 0) {
+                alert('Non ci sono frame precedenti da copiare!');
+                return;
+            }
+            
+            const previousFrameDrawings = drawings.get(previousFrameKey);
+            
+            if (!previousFrameDrawings || previousFrameDrawings.length === 0) {
+                alert('Il frame precedente non contiene disegni da copiare!');
+                return;
+            }
+            
+            // Crea una copia profonda dei disegni del frame precedente
+            const copiedDrawings = previousFrameDrawings.map(drawing => {
+                if (drawing.points) {
+                    return {
+                        ...drawing,
+                        points: [...drawing.points]
+                    };
+                } else {
+                    return { ...drawing };
+                }
+            });
+            
+            // Se il frame corrente non ha disegni, crea un nuovo array
+            if (!drawings.has(currentFrameKey)) {
+                drawings.set(currentFrameKey, []);
+            }
+            
+            // Aggiungi i disegni copiati a quelli esistenti nel frame corrente
+            drawings.get(currentFrameKey).push(...copiedDrawings);
+            
+            updateCanvas();
+            
+            // Feedback visivo
+            const copyBtn = event.target;
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '✅ Copiato!';
+            copyBtn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.style.background = '';
+            }, 1500);
+        }
+
+        function exportFrame() {
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+            exportCanvas.width = canvas.width;
+            exportCanvas.height = canvas.height;
+            
+            exportCtx.drawImage(canvas, 0, 0);
+            
+            const link = document.createElement('a');
+            link.download = `frame_${getCurrentFrameKey()}.png`;
+            link.href = exportCanvas.toDataURL();
+            link.click();
+        }
+
+        async function exportVideo() {
+            const exportProgress = document.getElementById('exportProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            exportProgress.style.display = 'block';
+            progressText.textContent = 'Inizializzazione export video...';
+            progressBar.style.width = '10%';
+
+            try {
+                // Lista di codec da provare in ordine di preferenza
+                const codecOptions = [
+                    'video/webm;codecs=vp8',
+                    'video/webm',
+                    'video/mp4;codecs=h264',
+                    'video/mp4'
+                ];
+
+                let supportedCodec = null;
+                for (const codec of codecOptions) {
+                    if (MediaRecorder.isTypeSupported(codec)) {
+                        supportedCodec = codec;
+                        break;
+                    }
+                }
+
+                if (!supportedCodec) {
+                    // Fallback: export come sequenza di immagini
+                    await exportVideoAsFrames();
+                    return;
+                }
+
+                progressText.textContent = `Usando codec: ${supportedCodec}`;
+                progressBar.style.width = '15%';
+
+                // Crea un canvas per il rendering
+                const exportCanvas = document.createElement('canvas');
+                const exportCtx = exportCanvas.getContext('2d');
+                exportCanvas.width = video.videoWidth;
+                exportCanvas.height = video.videoHeight;
+
+                // Calcola il framerate (assumiamo 30 FPS)
+                const fps = 30;
+                const duration = video.duration;
+                const totalFrames = Math.floor(duration * fps);
+                
+                progressText.textContent = `Preparando ${totalFrames} frame...`;
+                progressBar.style.width = '20%';
+
+                // Crea MediaRecorder per registrare il video
+                const stream = exportCanvas.captureStream(fps);
+                const mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: supportedCodec,
+                    videoBitsPerSecond: 5000000 // Bitrate medio-alto
+                });
+
+                const chunks = [];
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) chunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: supportedCodec });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    
+                    // Determina l'estensione del file
+                    const extension = supportedCodec.includes('mp4') ? 'mp4' : 'webm';
+                    link.download = `video_with_drawings_${Date.now()}.${extension}`;
+                    link.click();
+                    
+                    exportProgress.style.display = 'none';
+                    URL.revokeObjectURL(url);
+                };
+
+                mediaRecorder.start();
+                progressText.textContent = 'Registrazione video...';
+                progressBar.style.width = '30%';
+
+                // Renderizza tutti i frame in tempo reale
+                let currentFrame = 0;
+                const frameInterval = 1000 / fps;
+                
+                const renderLoop = () => {
+                    if (currentFrame >= totalFrames) {
+                        progressText.textContent = 'Finalizzando video...';
+                        progressBar.style.width = '100%';
+                        
+                        setTimeout(() => {
+                            mediaRecorder.stop();
+                        }, 1000);
+                        return;
+                    }
+                    
+                    const timePosition = currentFrame / fps;
+                    video.currentTime = timePosition;
+                    
+                    // Aspetta che il video sia pronto
+                    const checkVideoReady = () => {
+                        if (Math.abs(video.currentTime - timePosition) < 0.1) {
+                            // Disegna il frame video
+                            exportCtx.drawImage(video, 0, 0, exportCanvas.width, exportCanvas.height);
+                            
+                            // Disegna i drawings per questo frame
+                            const frameKey = Math.floor(timePosition * fps);
+                            const frameDrawings = drawings.get(frameKey);
+                            
+                            if (frameDrawings) {
+                                const oldCtx = ctx;
+                                ctx = exportCtx;
+                                frameDrawings.forEach(drawing => {
+                                    drawShape(drawing);
+                                });
+                                ctx = oldCtx;
+                            }
+                            
+                            // Aggiorna progress
+                            const progress = Math.floor((currentFrame / totalFrames) * 70) + 30;
+                            progressBar.style.width = progress + '%';
+                            progressText.textContent = `Frame ${currentFrame + 1} / ${totalFrames}`;
+                            
+                            currentFrame++;
+                            setTimeout(renderLoop, frameInterval);
+                        } else {
+                            // Riprova fra poco
+                            setTimeout(checkVideoReady, 50);
+                        }
+                    };
+                    
+                    checkVideoReady();
+                };
+                
+                renderLoop();
+
+            } catch (error) {
+                console.error('Errore durante l\'export del video:', error);
+                progressText.textContent = 'Errore durante l\'export. Provando metodo alternativo...';
+                
+                // Prova il metodo alternativo
+                await exportVideoAsFrames();
+            }
+        }
+
+        async function exportVideoAsFrames() {
+            const exportProgress = document.getElementById('exportProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            try {
+                progressText.textContent = 'Esportando come sequenza di immagini...';
+                progressBar.style.width = '10%';
+
+                const fps = 30;
+                const duration = video.duration;
+                const totalFrames = Math.floor(duration * fps);
+                
+                const zip = new JSZip();
+                const exportCanvas = document.createElement('canvas');
+                const exportCtx = exportCanvas.getContext('2d');
+                exportCanvas.width = video.videoWidth;
+                exportCanvas.height = video.videoHeight;
+
+                for (let i = 0; i < totalFrames; i++) {
+                    const timePosition = i / fps;
+                    video.currentTime = timePosition;
+                    
+                    // Aspetta che il video sia pronto
+                    await new Promise((resolve) => {
+                        const checkReady = () => {
+                            if (Math.abs(video.currentTime - timePosition) < 0.1) {
+                                resolve();
+                            } else {
+                                setTimeout(checkReady, 50);
+                            }
+                        };
+                        checkReady();
+                    });
+                    
+                    // Disegna il frame
+                    exportCtx.drawImage(video, 0, 0, exportCanvas.width, exportCanvas.height);
+                    
+                    // Disegna i drawings
+                    const frameKey = Math.floor(timePosition * fps);
+                    const frameDrawings = drawings.get(frameKey);
+                    
+                    if (frameDrawings) {
+                        const oldCtx = ctx;
+                        ctx = exportCtx;
+                        frameDrawings.forEach(drawing => {
+                            drawShape(drawing);
+                        });
+                        ctx = oldCtx;
+                    }
+                    
+                    // Converti in blob e aggiungi al zip
+                    const blob = await new Promise(resolve => {
+                        exportCanvas.toBlob(resolve, 'image/png');
+                    });
+                    
+                    const frameNumber = i.toString().padStart(6, '0');
+                    zip.file(`frame_${frameNumber}.png`, blob);
+                    
+                    const progress = Math.floor((i / totalFrames) * 90) + 10;
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = `Esportando frame ${i + 1} / ${totalFrames}`;
+                }
+                
+                progressText.textContent = 'Creando archivio ZIP...';
+                progressBar.style.width = '100%';
+                
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(zipBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `video_frames_${Date.now()}.zip`;
+                link.click();
+                
+                exportProgress.style.display = 'none';
+                URL.revokeObjectURL(url);
+                
+                alert('Video esportato come sequenza di immagini! Puoi ricomporre il video usando software come FFmpeg.');
+                
+            } catch (error) {
+                console.error('Errore durante l\'export frame:', error);
+                progressText.textContent = 'Errore durante l\'export frame.';
+                setTimeout(() => {
+                    exportProgress.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function exportDrawing() {
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+            exportCanvas.width = canvas.width;
+            exportCanvas.height = canvas.height;
+            
+            const frameKey = getCurrentFrameKey();
+            const frameDrawings = drawings.get(frameKey);
+            
+            if (frameDrawings) {
+                frameDrawings.forEach(drawing => {
+                    const oldCtx = ctx;
+                    ctx = exportCtx;
+                    drawShape(drawing);
+                    ctx = oldCtx;
+                });
+            }
+            
+            const link = document.createElement('a');
+            link.download = `drawing_${getCurrentFrameKey()}.png`;
+            link.href = exportCanvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
